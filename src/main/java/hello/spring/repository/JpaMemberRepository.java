@@ -2,14 +2,12 @@ package hello.spring.repository;
 
 import hello.spring.domain.Member;
 import lombok.AllArgsConstructor;
-import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
 import java.util.List;
 import java.util.Optional;
 
 @AllArgsConstructor
-@Repository
 public class JpaMemberRepository implements MemberRepository{
     private final EntityManager em;
 
