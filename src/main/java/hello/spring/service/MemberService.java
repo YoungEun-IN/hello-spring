@@ -4,11 +4,13 @@ import hello.spring.domain.Member;
 import hello.spring.repository.MemberRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
 @AllArgsConstructor
+@Transactional
 @Service
 public class MemberService {
     private final MemberRepository memberRepository;
