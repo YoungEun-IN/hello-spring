@@ -1,5 +1,6 @@
 package hello.spring;
 
+import hello.spring.aop.TimeTraceAop;
 import hello.spring.repository.MemberRepository;
 import hello.spring.service.MemberService;
 import lombok.AllArgsConstructor;
@@ -14,5 +15,10 @@ public class SpringConfig {
     @Bean
     public MemberService memberService() {
         return new MemberService(memberRepository);
+    }
+
+    @Bean
+    public TimeTraceAop timeTraceAop(){
+        return new TimeTraceAop();
     }
 }
