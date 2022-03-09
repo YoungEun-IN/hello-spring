@@ -2,7 +2,6 @@ package hello.spring.repository;
 
 import hello.spring.domain.Member;
 import lombok.AllArgsConstructor;
-import org.springframework.stereotype.Repository;
 
 import java.util.*;
 
