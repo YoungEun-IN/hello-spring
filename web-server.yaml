@@ -133,8 +133,8 @@ spec:
         app: webserver
     spec:
       containers:
-      - name: nginx-container 
-        image: nginx 
+      - name: web-container 
+        image: yyoungeunin/web
         env:
         - name: DATABASE_URL 
           value: "mysql-service.default.svc.cluster.local" # Kubernetes DNS 이름을 사용하여 MySQL 서비스를 참조합니다.
