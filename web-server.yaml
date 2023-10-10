@@ -40,83 +40,49 @@ spec:
 
 ---
 
-apiVersion:v1
-kind:"Service"
-metadata:{
-   "name":"mysql-service"
-}
-spec:{
-   "selector":{
-      "app":"mysql"
-   },
-   "ports":[  
-      {
-         "protocol":"TCP",
-         "port":3306,
-         "targetPort":3306,
-         "nodePort":30036 // NodePort 설정은 선택사항입니다.
-      }
-   ],
-   "type":"NodePort" // NodePort 설정은 선택사항입니다.
-}
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+spec:
+  selector:
+    app: mysql
+  ports:
+    - protocol: TCP
+      port: 3306 
+      targetPort: 3306 
+      nodePort: 30036
+  type: nodePort    
 
 ---
 
-apiVersion:"apps/v1"
-kind:"Deployment"
-metadata:{
-   "name":"mysql-deployment",
-}
-spec:{
-   replicas :3,
-     selector:{
-       matchLabels :{
-          app :"mysql",
-       },
-     },
-     template :{
-        metadata :{
-           labels :{
-              app :"mysql",
-           },
-        },
-        spec :{
-           containers:[  
-              {
-                 name :"mysql",
-                 image :"mysql", // 원하는 버전을 지정하려면 'image:mysql:{version}' 형식으로 지정하세요.
-                 ports:[  
-                    {
-                       containerPort :3306,
-                    }
-                 ],
-                 env:[  
-                    {
-                       name :"MYSQL_ROOT_PASSWORD",
-                       value :"root_password" // 실제 비밀번호로 변경하세요.
-                    }
-                 ],
-                volumeMounts:[
-                  {
-                     mountPath:"/etc/mysql/",
-                     name:"volume"
-                  }
-               ]
-              }
-           ],
-            volumes:[
-             {   
-                configMap:{
-                   defaultMode :0600,
-                   name :'mysql-config-map'
-                },   
-                name:'volume'
-             }   
-          ]
-        }
-     }
-}
-
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-deployment
+spec:
+  replicas: 3 # 원하는 레플리카 수를 지정하세요.
+  selector:
+    matchLabels:
+      app: mysql 
+  template:
+    metadata:
+      labels:
+        app: mysql 
+    spec:
+      containers:
+        - name: mysql-container 
+          image: mysql # 원하는 버전을 지정하려면 'image:mysql:{version}' 형식으로 지정하세요.
+          ports :
+            - containerPort: 3306  
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: root_password # 실제 비밀번호로 변경하세요.
+          volumes:
+            - name: volume
+              configMap:
+                defaultMode: 0600
+                name: mysql-config-map
 ---
 apiVersion: apps/v1
 kind: Deployment
