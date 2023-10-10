@@ -1,0 +1,172 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config-map
+data:
+  my.cnf: |
+    [mysqld]
+    max_connections=200
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-pv-volume
+  labels:
+    type: local
+spec:
+  storageClassName: standard 
+  capacity:
+    storage: 1Gi 
+  accessModes:
+    - ReadWriteOnce 
+  hostPath:
+    path: "/mnt/data" 
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pv-claim 
+spec:
+  storageClassName: standard 
+  accessModes:
+    - ReadWriteOnce 
+  resources:
+    requests:
+      storage: 1Gi 
+
+---
+
+apiVersion:v1
+kind:"Service"
+metadata:{
+   "name":"mysql-service"
+}
+spec:{
+   "selector":{
+      "app":"mysql"
+   },
+   "ports":[  
+      {
+         "protocol":"TCP",
+         "port":3306,
+         "targetPort":3306,
+         "nodePort":30036 // NodePort 설정은 선택사항입니다.
+      }
+   ],
+   "type":"NodePort" // NodePort 설정은 선택사항입니다.
+}
+
+---
+
+apiVersion:"apps/v1"
+kind:"Deployment"
+metadata:{
+   "name":"mysql-deployment",
+}
+spec:{
+   replicas :3,
+     selector:{
+       matchLabels :{
+          app :"mysql",
+       },
+     },
+     template :{
+        metadata :{
+           labels :{
+              app :"mysql",
+           },
+        },
+        spec :{
+           containers:[  
+              {
+                 name :"mysql",
+                 image :"mysql", // 원하는 버전을 지정하려면 'image:mysql:{version}' 형식으로 지정하세요.
+                 ports:[  
+                    {
+                       containerPort :3306,
+                    }
+                 ],
+                 env:[  
+                    {
+                       name :"MYSQL_ROOT_PASSWORD",
+                       value :"root_password" // 실제 비밀번호로 변경하세요.
+                    }
+                 ],
+                volumeMounts:[
+                  {
+                     mountPath:"/etc/mysql/",
+                     name:"volume"
+                  }
+               ]
+              }
+           ],
+            volumes:[
+             {   
+                configMap:{
+                   defaultMode :0600,
+                   name :'mysql-config-map'
+                },   
+                name:'volume'
+             }   
+          ]
+        }
+     }
+}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webserver-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: webserver
+  template:
+    metadata:
+      labels:
+        app: webserver
+    spec:
+      containers:
+      - name: nginx-container 
+        image: nginx 
+        env:
+        - name: DATABASE_URL 
+          value: "mysql-service.default.svc.cluster.local" # Kubernetes DNS 이름을 사용하여 MySQL 서비스를 참조합니다.
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webserver-service
+spec:
+  selector:
+    app: webserver
+  ports:
+  - protocol: TCP
+    port: 80 # 웹 서버가 사용하는 포트에 맞게 수정하세요.
+    targetPort: 80 # 웹 서버 컨테이너 내부의 포트에 맞게 수정하세요.
+    
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: webserver-ingress
+spec:
+  rules:
+  - host: "your-domain.com" # 여기에 원하는 도메인 이름을 입력하세요.
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: webserver-service # 이 서비스 이름은 웹서버 디플로이먼트에 대한 서비스 이름과 일치해야 합니다.
+            port:
+              number: 80 # 이 포트 번호는 웹서버 디플로이먼트가 리스닝하고 있는 포트와 일치해야 합니다.
