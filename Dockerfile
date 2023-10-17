@@ -1,15 +1,17 @@
-FROM openjdk:11-jdk-slim
+FROM gradle:7.4-jdk11 as builder
 
 WORKDIR /app
 
-# COPY만 docker-compose 파일의 위치를 기반으로 작동함
 COPY . .
 
-# RUN은 현재 파일의 위치를 기반으로 작동함
-RUN chmod +x ./gradlew
-RUN ./gradlew clean build
+RUN gradle clean bootJar
 
-ARG JAR_FILE=build/libs/*.jar
-COPY ${JAR_FILE} app.jar
+FROM openjdk:11-jre-slim as runtime
+
+WORKDIR /app
+
+COPY --from=builder /app/build/libs/*.jar app.jar
+
+EXPOSE 80
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
